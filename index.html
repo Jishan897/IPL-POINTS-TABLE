@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IPL Points Table Management</title>
+  <style>
+    :root {
+      --bg-primary: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-tertiary: #21262d;
+      --text-primary: #f0f6fc;
+      --text-secondary: #8b949e;
+      --accent-primary: #238636;
+      --accent-secondary: #1f6feb;
+      --border-color: #30363d;
+      --success-color: #238636;
+      --error-color: #da3633;
+      --warning-color: #d29922;
+      --shadow: 0 8px 24px rgba(140, 149, 159, 0.2);
+      --gradient-primary: linear-gradient(135deg, #1f6feb 0%, #238636 100%);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+      padding: 24px;
+      background: var(--gradient-primary);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 24px;
+      background: var(--bg-secondary);
+      padding: 4px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 12px 16px;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-weight: 500;
+      white-space: nowrap;
+      min-width: 120px;
+    }
+
+    .tab:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .tab.active {
+      background: var(--accent-secondary);
+      color: white;
+      box-shadow: 0 4px 12px rgba(31, 111, 235, 0.3);
+    }
+
+    .content {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 24px;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow);
+    }
+
+    .content h2 {
+      margin-bottom: 20px;
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 1.5rem;
+    }
+
+    /* Table Styles */
+    .table-container {
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-tertiary);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    td {
+      color: var(--text-secondary);
+    }
+
+    tr:hover {
+      background: var(--bg-primary);
+    }
+
+    .position-cell {
+      font-weight: 700;
+      color: var(--accent-primary);
+    }
+
+    .team-name {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .positive-nrr {
+      color: var(--success-color);
+      font-weight: 500;
+    }
+
+    .negative-nrr {
+      color: var(--error-color);
+      font-weight: 500;
+    }
+
+    /* Form Styles */
+    .form-grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label {
+      margin-bottom: 6px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    input, select {
+      padding: 12px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent-secondary);
+      box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.1);
+    }
+
+    input::placeholder {
+      color: var(--text-secondary);
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--gradient-primary);
+      color: white;
+      box-shadow: 0 4px 12px rgba(31, 111, 235, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(31, 111, 235, 0.4);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    /* Status Messages */
+    .message {
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin: 16px 0;
+      font-weight: 500;
+    }
+
+    .success {
+      background: rgba(35, 134, 54, 0.15);
+      color: var(--success-color);
+      border: 1px solid rgba(35, 134, 54, 0.3);
+    }
+
+    .error {
+      background: rgba(218, 54, 51, 0.15);
+      color: var(--error-color);
+      border: 1px solid rgba(218, 54, 51, 0.3);
+    }
+
+    /* Loading States */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border-color);
+      border-top-color: var(--accent-secondary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 12px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Cards */
+    .stat-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--bg-tertiary);
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent-secondary);
+    }
+
+    .stat-label {
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 12px;
+      }
+
+      .header h1 {
+        font-size: 2rem;
+      }
+
+      .tabs {
+        flex-direction: column;
+      }
+
+      .tab {
+        min-width: auto;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stat-cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stat-cards {
+        grid-template-columns: 1fr;
+      }
+      
+      .header {
+        padding: 16px;
+      }
+      
+      .content {
+        padding: 16px;
+      }
+    }
+
+    /* Accessibility */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>🏏 IPL Tournament Manager</h1>
+    <p>Professional cricket tournament management system with real-time statistics</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('standings', this)">Points Table</button>
+    <button class="tab" onclick="showTab('matches', this)">Record Match</button>
+    <button class="tab" onclick="showTab('history', this)">Match History</button>
+    <button class="tab" onclick="showTab('teams', this)">Manage Teams</button>
+  </div>
+
+  <div id="standingsTab" class="content">
+    <h2>Current Standings</h2>
+    <div id="tournamentStats" class="stat-cards"></div>
+    <div class="table-container">
+      <div id="standingsContent" class="loading">
+        <div class="spinner"></div>
+        Loading standings...
+      </div>
+    </div>
+  </div>
+
+  <div id="matchesTab" class="content" style="display:none;">
+    <h2>Record New Match</h2>
+    <div id="matchMessage"></div>
+    <form id="matchForm">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="team1">Team 1</label>
+          <select id="team1" required>
+            <option value="">Select Team 1</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="team2">Team 2</label>
+          <select id="team2" required>
+            <option value="">Select Team 2</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="team1Score">Team 1 Score</label>
+          <input type="number" id="team1Score" placeholder="e.g., 180" required min="0" max="500">
+        </div>
+        <div class="form-group">
+          <label for="team2Score">Team 2 Score</label>
+          <input type="number" id="team2Score" placeholder="e.g., 175" required min="0" max="500">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary">Record Match</button>
+    </form>
+  </div>
+
+  <div id="historyTab" class="content" style="display:none;">
+    <h2>Match History</h2>
+    <div class="table-container">
+      <div id="historyContent" class="loading">
+        <div class="spinner"></div>
+        Loading match history...
+      </div>
+    </div>
+  </div>
+
+  <div id="teamsTab" class="content" style="display:none;">
+    <h2>Team Management</h2>
+    <div id="teamMessage"></div>
+    <form id="teamForm">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="teamName">Team Name</label>
+          <input type="text" id="teamName" required placeholder="Enter team name">
+        </div>
+        <div class="form-group">
+          <label for="shortName">Short Name (3 letters)</label>
+          <input type="text" id="shortName" maxlength="3" placeholder="e.g., MI">
+        </div>
+        <div class="form-group">
+          <label for="captain">Captain</label>
+          <input type="text" id="captain" placeholder="Captain name">
+        </div>
+        <div class="form-group">
+          <label for="homeGround">Home Ground</label>
+          <input type="text" id="homeGround" placeholder="Stadium name">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary">Add Team</button>
+    </form>
+    <div id="teamsContent"></div>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'http://localhost:3000/api';
+
+// Cache for better performance
+let cachedTeams = null;
+let lastFetchTime = 0;
+const CACHE_DURATION = 30000; // 30 seconds
+
+function showTab(tab, el) {
+  // Hide all content
+  document.querySelectorAll('.content').forEach(c => c.style.display = 'none');
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  
+  // Show selected content
+  document.getElementById(tab + 'Tab').style.display = 'block';
+  el.classList.add('active');
+  
+  // Load content based on tab
+  switch(tab) {
+    case 'standings':
+      loadStandings();
+      break;
+    case 'history':
+      loadHistory();
+      break;
+    case 'matches':
+      loadTeamsForDropdown();
+      break;
+    case 'teams':
+      loadTeamsList();
+      break;
+  }
+}
+
+async function fetchWithCache(url) {
+  const now = Date.now();
+  if (cachedTeams && (now - lastFetchTime) < CACHE_DURATION) {
+    return { success: true, data: cachedTeams };
+  }
+  
+  const response = await fetch(url);
+  const data = await response.json();
+  
+  if (data.success && url.includes('/teams')) {
+    cachedTeams = data.data;
+    lastFetchTime = now;
+  }
+  
+  return data;
+}
+
+async function loadStandings() {
+  try {
+    const [standingsRes, tournamentRes] = await Promise.all([
+      fetch(`${API_BASE}/standings`),
+      fetch(`${API_BASE}/tournament`)
+    ]);
+    
+    const standingsData = await standingsRes.json();
+    const tournamentData = await tournamentRes.json();
+    
+    if (standingsData.success) {
+      renderStandings(standingsData.data);
+    }
+    
+    if (tournamentData.success) {
+      renderTournamentStats(tournamentData.data.tournament);
+    }
+  } catch (error) {
+    console.error('Error loading standings:', error);
+    document.getElementById('standingsContent').innerHTML = 
+      '<div class="error">Server not running. Please start the backend server.</div>';
+  }
+}
+
+function renderStandings(standings) {
+  let html = `
+    <table>
+      <thead>
+        <tr>
+          <th>Pos</th>
+          <th>Team</th>
+          <th>M</th>
+          <th>W</th>
+          <th>L</th>
+          <th>Pts</th>
+          <th>NRR</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+  
+  standings.forEach((team, index) => {
+    const nrr = parseFloat(team.netRunRate);
+    const nrrClass = nrr > 0 ? 'positive-nrr' : nrr < 0 ? 'negative-nrr' : '';
+    
+    html += `
+      <tr>
+        <td class="position-cell">${index + 1}</td>
+        <td class="team-name">${team.name}</td>
+        <td>${team.matchesPlayed}</td>
+        <td>${team.wins}</td>
+        <td>${team.losses}</td>
+        <td><strong>${team.points}</strong></td>
+        <td class="${nrrClass}">${nrr >= 0 ? '+' : ''}${nrr.toFixed(2)}</td>
+      </tr>
+    `;
+  });
+  
+  html += '</tbody></table>';
+  document.getElementById('standingsContent').innerHTML = html;
+}
+
+function renderTournamentStats(stats) {
+  const html = `
+    <div class="stat-card">
+      <div class="stat-value">${stats.totalTeams}</div>
+      <div class="stat-label">Teams</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">${stats.matchesPlayed}</div>
+      <div class="stat-label">Matches</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">${stats.playoffTeams.length}</div>
+      <div class="stat-label">Playoff Teams</div>
+    </div>
+  `;
+  document.getElementById('tournamentStats').innerHTML = html;
+}
+
+async function loadTeamsForDropdown() {
+  try {
+    const data = await fetchWithCache(`${API_BASE}/teams`);
+    
+    if (data.success) {
+      const teams = data.data;
+      const team1Select = document.getElementById('team1');
+      const team2Select = document.getElementById('team2');
+      
+      team1Select.innerHTML = '<option value="">Select Team 1</option>';
+      team2Select.innerHTML = '<option value="">Select Team 2</option>';
+      
+      teams.forEach(team => {
+        const option1 = `<option value="${team.name}">${team.name}</option>`;
+        const option2 = `<option value="${team.name}">${team.name}</option>`;
+        team1Select.innerHTML += option1;
+        team2Select.innerHTML += option2;
+      });
+    }
+  } catch (error) {
+    console.error('Error loading teams:', error);
+  }
+}
+
+async function loadHistory() {
+  try {
+    const res = await fetch(`${API_BASE}/matches/history`);
+    const data = await res.json();
+    
+    if (data.success) {
+      const matches = data.data;
+      let html = `
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Team 1</th>
+              <th>Score</th>
+              <th>Team 2</th>
+              <th>Score</th>
+              <th>Winner</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      
+      matches.forEach(match => {
+        const date = new Date(match.date).toLocaleDateString();
+        html += `
+          <tr>
+            <td>${date}</td>
+            <td class="team-name">${match.team1}</td>
+            <td><strong>${match.team1Score}</strong></td>
+            <td class="team-name">${match.team2}</td>
+            <td><strong>${match.team2Score}</strong></td>
+            <td class="team-name">${match.winner}</td>
+          </tr>
+        `;
+      });
+      
+      html += '</tbody></table>';
+      document.getElementById('historyContent').innerHTML = html;
+    }
+  } catch (error) {
+    console.error('Error loading history:', error);
+    document.getElementById('historyContent').innerHTML = 
+      '<div class="error">Failed to load match history</div>';
+  }
+}
+
+async function loadTeamsList() {
+  try {
+    const data = await fetchWithCache(`${API_BASE}/teams`);
+    
+    if (data.success) {
+      const teams = data.data;
+      let html = `
+        <h3 style="margin: 24px 0 16px 0; color: var(--text-primary);">Current Teams</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Team</th>
+                <th>Captain</th>
+                <th>Points</th>
+                <th>Matches</th>
+                <th>NRR</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+      
+      teams.forEach(team => {
+        const nrr = parseFloat(team.netRunRate);
+        const nrrClass = nrr > 0 ? 'positive-nrr' : nrr < 0 ? 'negative-nrr' : '';
+        
+        html += `
+          <tr>
+            <td class="team-name">${team.name}</td>
+            <td>${team.captain}</td>
+            <td><strong>${team.points}</strong></td>
+            <td>${team.matchesPlayed}</td>
+            <td class="${nrrClass}">${nrr >= 0 ? '+' : ''}${nrr.toFixed(2)}</td>
+          </tr>
+        `;
+      });
+      
+      html += '</tbody></table></div>';
+      document.getElementById('teamsContent').innerHTML = html;
+    }
+  } catch (error) {
+    console.error('Error loading teams:', error);
+  }
+}
+
+// Form handlers with better error handling
+document.getElementById('matchForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  const originalText = submitBtn.textContent;
+  
+  submitBtn.textContent = 'Recording...';
+  submitBtn.disabled = true;
+  
+  const team1 = document.getElementById('team1').value;
+  const team2 = document.getElementById('team2').value;
+  const team1Score = parseInt(document.getElementById('team1Score').value);
+  const team2Score = parseInt(document.getElementById('team2Score').value);
+  
+  if (team1 === team2) {
+    showMessage('matchMessage', 'Please select different teams', 'error');
+    submitBtn.textContent = originalText;
+    submitBtn.disabled = false;
+    return;
+  }
+  
+  if (!team1Score || !team2Score) {
+    showMessage('matchMessage', 'Please enter valid scores for both teams', 'error');
+    submitBtn.textContent = originalText;
+    submitBtn.disabled = false;
+    return;
+  }
+  
+  try {
+    const res = await fetch(`${API_BASE}/matches`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ team1, team2, team1Score, team2Score })
+    });
+    
+    const data = await res.json();
+    
+    if (data.success) {
+      showMessage('matchMessage', data.message, 'success');
+      document.getElementById('matchForm').reset();
+      // Clear cache to force refresh
+      cachedTeams = null;
+    } else {
+      showMessage('matchMessage', data.message, 'error');
+    }
+  } catch (error) {
+    console.error('Error recording match:', error);
+    showMessage('matchMessage', 'Failed to record match', 'error');
+  } finally {
+    submitBtn.textContent = originalText;
+    submitBtn.disabled = false;
+  }
+});
+
+document.getElementById('teamForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  const originalText = submitBtn.textContent;
+  
+  submitBtn.textContent = 'Adding...';
+  submitBtn.disabled = true;
+  
+  const teamData = {
+    name: document.getElementById('teamName').value,
+    shortName: document.getElementById('shortName').value,
+    captain: document.getElementById('captain').value,
+    homeGround: document.getElementById('homeGround').value
+  };
+  
+  try {
+    const res = await fetch(`${API_BASE}/teams`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(teamData)
+    });
+    
+    const data = await res.json();
+    
+    if (data.success) {
+      showMessage('teamMessage', 'Team added successfully!', 'success');
+      document.getElementById('teamForm').reset();
+      loadTeamsList();
+      // Clear cache to force refresh
+      cachedTeams = null;
+    } else {
+      showMessage('teamMessage', data.message, 'error');
+    }
+  } catch (error) {
+    console.error('Error adding team:', error);
+    showMessage('teamMessage', 'Failed to add team', 'error');
+  } finally {
+    submitBtn.textContent = originalText;
+    submitBtn.disabled = false;
+  }
+});
+
+function showMessage(containerId, message, type) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = `<div class="message ${type}">${message}</div>`;
+  setTimeout(() => {
+    container.innerHTML = '';
+  }, 5000);
+}
+
+// Initialize
+loadStandings();
+</script>
+</body>
+</html>
