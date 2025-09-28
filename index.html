@@ -235,6 +235,12 @@
       transform: translateY(0);
     }
 
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
     /* Status Messages */
     .message {
       padding: 12px 16px;
@@ -305,6 +311,30 @@
       margin-top: 4px;
     }
 
+    /* Status indicator */
+    .status-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      z-index: 1000;
+    }
+
+    .status-online {
+      background: rgba(35, 134, 54, 0.2);
+      color: var(--success-color);
+      border: 1px solid rgba(35, 134, 54, 0.3);
+    }
+
+    .status-offline {
+      background: rgba(218, 54, 51, 0.2);
+      color: var(--error-color);
+      border: 1px solid rgba(218, 54, 51, 0.3);
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
       .container {
@@ -329,6 +359,13 @@
 
       .stat-cards {
         grid-template-columns: repeat(2, 1fr);
+      }
+
+      .status-indicator {
+        position: relative;
+        top: auto;
+        right: auto;
+        margin-bottom: 16px;
       }
     }
 
@@ -357,6 +394,8 @@
   </style>
 </head>
 <body>
+<div id="statusIndicator" class="status-indicator status-offline">Connecting...</div>
+
 <div class="container">
   <div class="header">
     <h1>🏏 IPL Tournament Manager</h1>
@@ -450,12 +489,42 @@
 </div>
 
 <script>
-const API_BASE = 'http://localhost:3000/api';
+// Updated to use deployed server
+const API_BASE = 'https://ipl-points-table-3.onrender.com/api';
 
 // Cache for better performance
 let cachedTeams = null;
 let lastFetchTime = 0;
 const CACHE_DURATION = 30000; // 30 seconds
+let serverStatus = 'checking';
+
+// Check server status
+async function checkServerStatus() {
+  try {
+    const response = await fetch(`${API_BASE}/health`);
+    const data = await response.json();
+    if (data.success) {
+      updateStatusIndicator('online');
+      return true;
+    }
+  } catch (error) {
+    console.warn('Server check failed:', error);
+    updateStatusIndicator('offline');
+    return false;
+  }
+}
+
+function updateStatusIndicator(status) {
+  const indicator = document.getElementById('statusIndicator');
+  if (status === 'online') {
+    indicator.textContent = 'Server Online';
+    indicator.className = 'status-indicator status-online';
+  } else {
+    indicator.textContent = 'Server Offline';
+    indicator.className = 'status-indicator status-offline';
+  }
+  serverStatus = status;
+}
 
 function showTab(tab, el) {
   // Hide all content
@@ -512,6 +581,7 @@ async function loadStandings() {
     
     if (standingsData.success) {
       renderStandings(standingsData.data);
+      updateStatusIndicator('online');
     }
     
     if (tournamentData.success) {
@@ -519,8 +589,9 @@ async function loadStandings() {
     }
   } catch (error) {
     console.error('Error loading standings:', error);
+    updateStatusIndicator('offline');
     document.getElementById('standingsContent').innerHTML = 
-      '<div class="error">Server not running. Please start the backend server.</div>';
+      '<div class="error">Unable to connect to server. The server may be starting up (this can take 50+ seconds on first load).</div>';
   }
 }
 
@@ -598,9 +669,12 @@ async function loadTeamsForDropdown() {
         team1Select.innerHTML += option1;
         team2Select.innerHTML += option2;
       });
+      
+      updateStatusIndicator('online');
     }
   } catch (error) {
     console.error('Error loading teams:', error);
+    updateStatusIndicator('offline');
   }
 }
 
@@ -642,11 +716,13 @@ async function loadHistory() {
       
       html += '</tbody></table>';
       document.getElementById('historyContent').innerHTML = html;
+      updateStatusIndicator('online');
     }
   } catch (error) {
     console.error('Error loading history:', error);
+    updateStatusIndicator('offline');
     document.getElementById('historyContent').innerHTML = 
-      '<div class="error">Failed to load match history</div>';
+      '<div class="error">Failed to load match history. Server may be starting up.</div>';
   }
 }
 
@@ -689,9 +765,11 @@ async function loadTeamsList() {
       
       html += '</tbody></table></div>';
       document.getElementById('teamsContent').innerHTML = html;
+      updateStatusIndicator('online');
     }
   } catch (error) {
     console.error('Error loading teams:', error);
+    updateStatusIndicator('offline');
   }
 }
 
@@ -738,12 +816,14 @@ document.getElementById('matchForm').addEventListener('submit', async (e) => {
       document.getElementById('matchForm').reset();
       // Clear cache to force refresh
       cachedTeams = null;
+      updateStatusIndicator('online');
     } else {
       showMessage('matchMessage', data.message, 'error');
     }
   } catch (error) {
     console.error('Error recording match:', error);
-    showMessage('matchMessage', 'Failed to record match', 'error');
+    updateStatusIndicator('offline');
+    showMessage('matchMessage', 'Failed to record match. Server may be starting up.', 'error');
   } finally {
     submitBtn.textContent = originalText;
     submitBtn.disabled = false;
@@ -781,12 +861,14 @@ document.getElementById('teamForm').addEventListener('submit', async (e) => {
       loadTeamsList();
       // Clear cache to force refresh
       cachedTeams = null;
+      updateStatusIndicator('online');
     } else {
       showMessage('teamMessage', data.message, 'error');
     }
   } catch (error) {
     console.error('Error adding team:', error);
-    showMessage('teamMessage', 'Failed to add team', 'error');
+    updateStatusIndicator('offline');
+    showMessage('teamMessage', 'Failed to add team. Server may be starting up.', 'error');
   } finally {
     submitBtn.textContent = originalText;
     submitBtn.disabled = false;
@@ -802,7 +884,12 @@ function showMessage(containerId, message, type) {
 }
 
 // Initialize
-loadStandings();
+checkServerStatus().then(() => {
+  loadStandings();
+});
+
+// Check server status periodically
+setInterval(checkServerStatus, 60000); // Check every minute
 </script>
 </body>
 </html>
